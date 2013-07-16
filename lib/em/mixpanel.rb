@@ -58,6 +58,14 @@ module EM
       request(url)
     end
 
+    def properties_hash(properties, special_properties)
+      properties.inject({}) do |props, (key, value)|
+        key = "$#{key}" if special_properties.include?(key.to_s)
+        props[key.to_sym] = value
+        props
+      end
+    end
+
     def person_request_properties(request_properties_or_distinct_id)
       default = {:token => @token}
       if request_properties_or_distinct_id.respond_to? :to_hash
