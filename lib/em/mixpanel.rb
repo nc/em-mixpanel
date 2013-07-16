@@ -39,7 +39,13 @@ module EM
     end
 
     def request(url)
-      EM::HttpRequest.new(url).post()
+      http = EM::HttpRequest.new(url).post()
+      http.errback { p 'Uh oh' }
+      http.callback {
+        p http.response_header.status
+        p http.response_header
+        p http.response
+      }
     end
 
     def engage(action, request_properties_or_distinct_id, properties, options)
@@ -71,7 +77,7 @@ module EM
     end
 
     def person_request_properties(request_properties_or_distinct_id)
-      default = {:token => @token}
+      default = {:token => @token, :ip => 0}
       if request_properties_or_distinct_id.respond_to? :to_hash
         default.merge(request_properties_or_distinct_id)
       else
