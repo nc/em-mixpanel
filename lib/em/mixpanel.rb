@@ -66,6 +66,10 @@ module EM
       end
     end
 
+    def encoded_data(parameters)
+      Base64.encode64(JSON.generate(parameters)).gsub(/\n/,'')
+    end
+
     def person_request_properties(request_properties_or_distinct_id)
       default = {:token => @token}
       if request_properties_or_distinct_id.respond_to? :to_hash
