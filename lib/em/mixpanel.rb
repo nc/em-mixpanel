@@ -39,13 +39,7 @@ module EM
     end
 
     def request(url)
-      http = EM::HttpRequest.new(url).post()
-      http.errback { p 'Uh oh' }
-      http.callback {
-        p http.response_header.status
-        p http.response_header
-        p http.response
-      }
+      EM::HttpRequest.new(url).post()
     end
 
     def engage(action, request_properties_or_distinct_id, properties, options)
