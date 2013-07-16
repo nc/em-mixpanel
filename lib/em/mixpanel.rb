@@ -6,6 +6,11 @@ require 'em-http'
 module EM
   class Mixpanel
     TRACK_URI = 'http://api.mixpanel.com/track'
+    #from https://mixpanel.com/docs/people-analytics/special-properties
+    PERSON_PROPERTIES = %w{email created first_name last_name name last_login username country_code region city}
+    #from https://mixpanel.com/docs/people-analytics/people-http-specification-insert-data
+    PERSON_REQUEST_PROPERTIES = %w{token distinct_id ip ignore_time}
+    PERSON_URI = 'http://api.mixpanel.com/engage/'
     
     attr_reader :token, :default_properties
     
@@ -23,6 +28,51 @@ module EM
         body: {data: data},
         query: {ip: 0}
       )
+    end
+
+    def increment(distinct_id, properties={}, options={})
+      engage :add, distinct_id, properties, options
+    end
+
+    def set(distinct_id, properties={}, options={})
+      engage :set, distinct_id, properties, options
+    end
+
+    def request(url)
+      EM::HttpRequest.new(url).post()
+    end
+
+    def engage(action, request_properties_or_distinct_id, properties, options)
+      default = {:url => PERSON_URI}
+      options = default.merge(options)
+
+      request_properties = person_request_properties(request_properties_or_distinct_id)
+
+      if action == :unset
+        data = build_person_unset request_properties, properties
+      else
+        data = build_person action, request_properties, properties
+      end
+
+      url = "#{options[:url]}?data=#{encoded_data(data)}"
+      request(url)
+    end
+
+    def person_request_properties(request_properties_or_distinct_id)
+      default = {:token => @token, :ip => ip}
+      if request_properties_or_distinct_id.respond_to? :to_hash
+        default.merge(request_properties_or_distinct_id)
+      else
+        default.merge({ :distinct_id => request_properties_or_distinct_id })
+      end
+    end
+
+    def build_person(action, request_properties, person_properties)
+      properties_hash(request_properties, PERSON_REQUEST_PROPERTIES).merge({ "$#{action}".to_sym => properties_hash(person_properties, PERSON_PROPERTIES) })
+    end
+
+    def build_person_unset(request_properties, property)
+      properties_hash(request_properties, PERSON_REQUEST_PROPERTIES).merge({ "$unset".to_sym => [property] })
     end
     
   private
