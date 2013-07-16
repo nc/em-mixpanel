@@ -59,7 +59,7 @@ module EM
     end
 
     def person_request_properties(request_properties_or_distinct_id)
-      default = {:token => @token, :ip => ip}
+      default = {:token => @token}
       if request_properties_or_distinct_id.respond_to? :to_hash
         default.merge(request_properties_or_distinct_id)
       else
